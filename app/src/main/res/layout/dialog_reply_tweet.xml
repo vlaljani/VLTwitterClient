@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:paddingTop="@dimen/activity_horizontal_margin">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_back"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/transparent_white"
+        />
+
+    <ImageView
+        android:id="@+id/ivProfPic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/btnBack"
+        android:layout_alignBottom="@+id/btnBack"
+        android:layout_toRightOf="@+id/btnBack"
+        android:layout_marginRight="@dimen/prof_pic_margin"
+
+        />
+
+    <TextView
+        android:id="@+id/tvUserName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:layout_alignTop="@+id/ivProfPic"
+        android:layout_toRightOf="@+id/ivProfPic"
+        android:textColor="@color/black"
+        />
+
+    <TextView
+        android:id="@+id/tvScreenName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:layout_toRightOf="@+id/ivProfPic"
+        android:layout_below="@+id/tvUserName"
+        android:layout_alignBottom="@+id/ivProfPic"
+        android:textColor="@color/dark_gray"/>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/divider_padding"
+        android:background="@color/transparent_white"
+        android:layout_below="@+id/tvScreenName"
+        android:id="@+id/divAboveCharCount"/>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/divider_padding"
+        android:background="@color/transparent_white"
+        android:layout_below="@+id/tvCharCount"
+        android:id="@+id/divAboveEditText"/>
+
+    <EditText
+        android:id="@+id/etNewTweet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/new_tweet_hint"
+        android:layout_below="@+id/divAboveEditText"
+        android:singleLine="false"
+        android:background="@color/transparent_white"
+        android:paddingLeft="@dimen/activity_vertical_margin"
+        />
+
+    <TextView
+        android:id="@+id/tvCharCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/gray"
+        android:layout_toLeftOf="@+id/btnTweet"
+        android:layout_below="@+id/divAboveCharCount"/>
+
+    <Button
+        android:id="@+id/btnTweet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/roundbutton"
+        android:textColor="@color/white"
+        android:text="@string/tweet"
+        android:layout_alignParentRight="true"
+        android:layout_alignBottom="@+id/btnBack"
+        android:layout_alignTop="@+id/btnBack"
+        android:enabled="false"
+        android:alpha=".60"
+        android:textAllCaps="false"
+        android:layout_marginRight="@dimen/compose_dialog_padding_right"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true">
+        <ImageButton
+            android:id="@+id/btnLocEnable"
+            android:src="@drawable/ic_location"
+            android:layout_width="@dimen/zero_width"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@color/twitter_light_blue"
+            />
+        <ImageButton
+            android:id="@+id/btnUploadPhoto"
+            android:src="@drawable/ic_addimage"
+            android:layout_width="@dimen/zero_width"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@color/twitter_light_blue"/>
+    </LinearLayout>
+
+</RelativeLayout>

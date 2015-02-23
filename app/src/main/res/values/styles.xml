@@ -1,0 +1,16 @@
+<resources>
+
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light">
+        <item name="actionBarStyle">@style/CustomActionBar</item>
+
+    </style>
+
+    <style name="CustomActionBar" parent="@style/Widget.AppCompat.Light.ActionBar">
+        <item name="background">@color/twitter_blue</item>
+        <item name="titleTextStyle">@style/CustomTitleTextStyle</item>
+    </style>
+    <style name="CustomTitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+</resources>

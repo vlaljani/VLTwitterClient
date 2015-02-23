@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LoginActivity" >
+
+    <TextView
+        android:id="@+id/tvFollowInterests"
+        android:layout_above="@+id/tvFollowSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:text="@string/follow_your_interests"
+        android:layout_centerHorizontal="true"/>
+    <TextView
+        android:id="@+id/tvFollowSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/black"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:text="@string/instant_updates"
+        android:layout_above="@+id/btnLogin"
+        android:layout_alignLeft="@+id/btnLogin"
+        android:layout_alignRight="@+id/btnLogin"/>
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp"
+        android:onClick="loginToRest"
+        android:text="@string/login_label"
+        android:background="@color/twitter_blue"
+        android:textColor="@color/white"
+        android:drawableLeft="@drawable/ic_twitter"
+        android:layout_centerVertical="true"
+        />
+    <ImageView
+        android:id="@+id/ivBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/worldmapbackground"
+        android:layout_alignParentBottom="true"
+        android:alpha=".30"
+        android:scaleType="fitXY"/>
+
+</RelativeLayout>
