@@ -44,6 +44,8 @@ public class ReplyDialog extends DialogFragment {
     private EditText etNewTweet;
     private long curr_status_uid;
 
+    private User auth_user;
+
     public ReplyDialog() {
 
     }
@@ -70,7 +72,7 @@ public class ReplyDialog extends DialogFragment {
     }
 
     private void setupViews(View view) {
-        User auth_user = getArguments().getParcelable(Constants.authUserKey);
+        auth_user = getArguments().getParcelable(Constants.authUserKey);
         String screen_name = getArguments().getString("screen_name");
         curr_status_uid = getArguments().getLong("curr_status_uid");
 
@@ -134,11 +136,11 @@ public class ReplyDialog extends DialogFragment {
             public void onClick(View v) {
                 final ReplyDialogListener listener = (ReplyDialogListener) getActivity();
 
-                final Tweet newTweet = new Tweet();
+                Tweet newTweet = new Tweet();
                 newTweet.setText(etNewTweet.getText().toString());
-                User user = getArguments().getParcelable(Constants.userKey);
-                newTweet.setUser(user);
+                newTweet.setUser(auth_user);
                 newTweet.setCreated_at(getCurrentTimeStamp());
+                final Tweet tweet_to_send = newTweet;
 
                 TwitterClient client = TwitterApplication.getRestClient();
                 client.reply(etNewTweet.getText().toString(), curr_status_uid,
@@ -146,8 +148,8 @@ public class ReplyDialog extends DialogFragment {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject jsonObject) {
                         if (jsonObject != null) {
-                            listener.onFinishReplyDialog(newTweet);
-                            dismiss();
+                            Log.i("new tweet", "reaches here");
+                            listener.onFinishReplyDialog(tweet_to_send);
                         } else {
                             Toast.makeText(getActivity(),
                                     getResources().getString(R.string.sth_wrong),

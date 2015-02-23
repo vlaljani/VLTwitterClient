@@ -134,12 +134,17 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
         lvTweets.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i = new Intent(HomeTimelineActivity.this, TweetDetailActivity.class);
-                i.putExtra(Constants.tweetKey, tweetArrayList.get(position));
-                i.putExtra(Constants.userKey, tweetArrayList.get(position).getUser());
-                i.putExtra(Constants.authUserKey, currentUser);
-                //startActivityForResult(i, Constants.TWEET_DETAIL_REQ_CODE);
-                startActivity(i);
+                if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
+                    Intent i = new Intent(HomeTimelineActivity.this, TweetDetailActivity.class);
+                    i.putExtra(Constants.tweetKey, tweetArrayList.get(position));
+                    i.putExtra(Constants.userKey, tweetArrayList.get(position).getUser());
+                    i.putExtra(Constants.authUserKey, currentUser);
+                    startActivityForResult(i, Constants.TWEET_DETAIL_REQ_CODE);
+                } else {
+                    Toast.makeText(HomeTimelineActivity.this,
+                            getResources().getString(R.string.internet_error),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -170,7 +175,13 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
         // Check if we're back from the Tweet Detail activity
         if (resultCode == RESULT_OK && requestCode == Constants.TWEET_DETAIL_REQ_CODE) {
             Tweet newTweet = data.getParcelableExtra(Constants.newTweetKey);
+            Log.i("new tweet", "home " + (newTweet.getUser() == null));
+            newTweet.setUser(currentUser);
             newTweet.save();
+            SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
+                    "WHERE uid=" + currentUser.getUid() + ")"
+                    +  " WHERE uid = "
+                    + newTweet.getuid());
 
             ArrayList<Tweet> temp = new ArrayList<>();
             temp.add(newTweet);
@@ -257,6 +268,10 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
     public void onFinishComposeDialog(Tweet newTweet) {
         // Adding it manually because it's too soon to expect refresh to pick it up
         newTweet.save();
+        SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
+                "WHERE uid=" + currentUser.getUid() + ")"
+                +  " WHERE uid = "
+                + newTweet.getuid());
         ArrayList<Tweet> temp = new ArrayList<>();
         temp.add(newTweet);
         temp.addAll(tweetArrayList);

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -100,9 +101,10 @@ public class TweetDetailActivity extends ActionBarActivity implements ReplyDialo
 
     }
 
+    private ReplyDialog replyDialog;
     private void showReplyDialog() {
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
-        ReplyDialog replyDialog = ReplyDialog.newInstance(auth_user,
+        replyDialog = ReplyDialog.newInstance(auth_user,
                                                           curr_user.getScreen_name(),
                                                           curr_tweet.getuid());
         replyDialog.show(fm, "fragment_all_comments");
@@ -118,7 +120,11 @@ public class TweetDetailActivity extends ActionBarActivity implements ReplyDialo
     }
 
     public void onFinishReplyDialog(Tweet newTweet) {
+
+        replyDialog.dismiss();
+
         Intent i = new Intent(TweetDetailActivity.this, HomeTimelineActivity.class);
+        Log.i("new tweet", "are you? " + (newTweet.getUser() == null));
         i.putExtra(Constants.newTweetKey, newTweet);
 
         setResult(RESULT_OK, i);
