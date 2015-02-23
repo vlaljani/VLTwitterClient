@@ -48,4 +48,4 @@ Video Walk Through:
 ![VideoWalkThrough](VideoWalkThroughForTwitterClient1.gif)
 
 Video Walk Through in offline mode: 
-![VideoWalkThroughOffline]
+![VideoWalkThroughOffline](VideoWalkThroughForTwitterClient2.gif)
