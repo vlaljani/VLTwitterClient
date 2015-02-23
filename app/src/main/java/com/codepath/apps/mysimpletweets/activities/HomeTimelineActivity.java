@@ -208,6 +208,9 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
                                 tweets.remove(0);
                             }
 
+                            tweetArrayList.addAll(tweets);
+                            tweetArrayAdapter.notifyDataSetChanged();
+
                             for (int i = 0; i < tweets.size(); i++) {
                                 User user_to_save = tweets.get(i).getUser();
                                 User.saveIf(user_to_save);
@@ -218,8 +221,7 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
                                          +  " WHERE uid = "
                                         + tweets.get(i).getuid());
                             }
-                            tweetArrayList.addAll(tweets);
-                            tweetArrayAdapter.notifyDataSetChanged();
+
                         }
                         curr_lowest_max_id = tweets.get(0).getuid();
                         for (int i = 1; i < tweets.size(); i++) {
@@ -228,7 +230,7 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
                             }
                         }
                     } else {
-                        Log.e(TAG, Constants.jsonError + " Tweets array null or empty");
+                        Log.e(TAG, Constants.jsonError + "  Tweets array null or empty");
                         Toast.makeText(HomeTimelineActivity.this,
                                 getResources().getString(R.string.sth_wrong),
                                 Toast.LENGTH_SHORT).show();

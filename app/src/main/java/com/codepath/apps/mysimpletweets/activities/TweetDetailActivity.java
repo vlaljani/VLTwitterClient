@@ -1,6 +1,7 @@
 package com.codepath.apps.mysimpletweets.activities;
 
 import android.content.Intent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
@@ -47,6 +48,10 @@ public class TweetDetailActivity extends ActionBarActivity implements ReplyDialo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tweet_detail);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         curr_tweet = getIntent().getParcelableExtra(Constants.tweetKey);
         curr_user = getIntent().getParcelableExtra(Constants.userKey);
         auth_user = getIntent().getParcelableExtra(Constants.authUserKey);
