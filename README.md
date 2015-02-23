@@ -47,5 +47,6 @@ Video Walk Through:
 
 ![VideoWalkThrough](VideoWalkThroughForTwitterClient1.gif)
 
-Video Walk Through in offline mode: (I just realized that my favorites and retweet count for offline might not be storing correctly - I'm looking into it) 
+Video Walk Through in offline mode: (I just realized that my favorites and retweet count for offline might not be storing correctly - I'm looking into it
+Edit: It's storing correctly in the DB - but displaying incorrectly. Now looking into that. ) 
 ![VideoWalkThroughOffline](VideoWalkThroughForTwitterClient2.gif)
