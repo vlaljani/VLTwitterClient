@@ -45,7 +45,7 @@ Codepath jars for OAuth
 
 Video Walk Through: 
 
-![VideoWalkThrough]
+![VideoWalkThrough](VideoWalkThroughForTwitterClient1.gif)
 
 Video Walk Through in offline mode: 
 ![VideoWalkThroughOffline]
