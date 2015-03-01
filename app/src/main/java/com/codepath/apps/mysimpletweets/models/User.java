@@ -27,6 +27,9 @@ public class User extends Model implements Parcelable {
     private String name;
 
     private String profile_image_url;
+    private String profile_bg_image_url;
+
+    private Boolean profile_protected;
 
     @Column(name = "screen_name")
     private String screen_name;
@@ -36,6 +39,38 @@ public class User extends Model implements Parcelable {
 
     @Column(name = "is_current_user")
     private boolean is_current_user;
+
+    @Column(name = "followers_count")
+    private int followers_count;
+
+    @Column(name = "following_count")
+    private int following_count;
+
+    @Column(name = "tweets_count")
+    private int tweets_count;
+
+    @Column(name = "description")
+    private String description;
+
+    public String getProfile_bg_image_url() {
+        return profile_bg_image_url;
+    }
+
+    public int getFollowers_count() {
+        return followers_count;
+    }
+
+    public int getFollowing_count() {
+        return following_count;
+    }
+
+    public int getTweets_count() {
+        return tweets_count;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     // Getters and setters where needed
     public String getScreen_name() {
@@ -72,11 +107,22 @@ public class User extends Model implements Parcelable {
         uid = -1;
     }
 
+    public Boolean getProfile_protected() {
+        return profile_protected;
+    }
+
     public static User fromJson (JSONObject userObject) {
         String userNameKey = "name";
         String userProfileImageUrlKey = "profile_image_url";
         String userIdKey = "id";
         String userScreenNameKey = "screen_name";
+        String followersCountKey = "followers_count";
+        String followingCountKey = "friends_count";
+        String tweetsCountKey = "statuses_count";
+        String profileBgImgUrlKey = "profile_background_image_url";
+        String descriptionKey = "description";
+        String protectedKey = "protected";
+
 
         User user = new User();
         try {
@@ -84,7 +130,15 @@ public class User extends Model implements Parcelable {
             user.profile_image_url = userObject.getString(userProfileImageUrlKey);
             user.uid = userObject.getLong(userIdKey);
             user.screen_name = userObject.getString(userScreenNameKey);
-            //user.save();
+            user.profile_bg_image_url = userObject.getString(profileBgImgUrlKey);
+            if (user.profile_bg_image_url.indexOf(Constants.defaultBgImgUrl) >= 0) {
+                user.profile_bg_image_url = null;
+            }
+            user.tweets_count = userObject.getInt(tweetsCountKey);
+            user.followers_count = userObject.getInt(followersCountKey);
+            user.following_count = userObject.getInt(followingCountKey);
+            user.description = userObject.getString(descriptionKey);
+            user.profile_protected = userObject.getBoolean(protectedKey);
 
         } catch (JSONException e) {
             Log.e(TAG, Constants.jsonError + " " + e.toString());
@@ -97,6 +151,11 @@ public class User extends Model implements Parcelable {
         this.profile_image_url = in.readString();
         this.screen_name = in.readString();
         this.uid = in.readLong();
+        this.profile_bg_image_url = in.readString();
+        this.tweets_count = in.readInt();
+        this.following_count = in.readInt();
+        this.followers_count = in.readInt();
+        this.profile_protected = in.readByte() != 0;
     }
 
     public void writeToParcel(Parcel dest, int flags) {
@@ -104,6 +163,11 @@ public class User extends Model implements Parcelable {
         dest.writeString(profile_image_url);
         dest.writeString(screen_name);
         dest.writeLong(uid);
+        dest.writeString(profile_bg_image_url);
+        dest.writeInt(tweets_count);
+        dest.writeInt(following_count);
+        dest.writeInt(followers_count);
+        dest.writeByte((byte) (profile_protected ? 1 : 0));
     }
 
     public int describeContents() {

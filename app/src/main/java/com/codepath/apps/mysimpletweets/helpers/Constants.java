@@ -4,6 +4,9 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.codepath.apps.mysimpletweets.models.User;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+
 /**
  * Created by vibhalaljani on 2/19/15.
  */
@@ -20,6 +23,12 @@ public class Constants {
     public static final int TWEET_DETAIL_REQ_CODE = 7;
     public static final String black = "#000000";
     public static final String authUserKey = "authUser";
+    public static User currentUser;
+    public static final String defaultBgImgUrl = "http://abs.twimg.com/images/themes/theme";
+    public static final String topTweetsKey = "popular";
+    public static final String allTweetsKey = "mixed";
+    public static final String resultTypeKey = "result_type";
+    public static final String queryKey = "query";
 
     // This method determines if the mobile device is connected to the internet
     public static Boolean isNetworkAvailable(Context context) {
@@ -28,4 +37,6 @@ public class Constants {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
     }
+
+
 }

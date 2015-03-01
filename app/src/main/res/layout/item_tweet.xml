@@ -11,7 +11,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_marginRight="@dimen/prof_pic_margin"/>
+        android:layout_marginRight="@dimen/prof_pic_margin"
+        android:clickable="true"/>
     <TextView
         android:id="@+id/tvUserName"
         android:layout_width="wrap_content"
@@ -98,7 +99,8 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_fav"
         android:layout_toRightOf="@+id/tvRetweet"
-        android:layout_below="@+id/lvMedia"/>
+        android:layout_below="@+id/lvMedia"
+        android:clickable="true"/>
     <TextView
         android:id="@+id/tvFav"
         android:layout_width="wrap_content"

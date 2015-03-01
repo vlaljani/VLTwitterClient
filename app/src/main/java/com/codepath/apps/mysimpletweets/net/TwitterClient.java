@@ -1,4 +1,4 @@
-package com.codepath.apps.mysimpletweets;
+package com.codepath.apps.mysimpletweets.net;
 
 import org.json.JSONArray;
 import org.scribe.builder.api.Api;
@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.codepath.apps.mysimpletweets.helpers.Constants;
+import com.codepath.apps.mysimpletweets.models.User;
 import com.codepath.oauth.OAuthBaseClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -49,6 +50,27 @@ public class TwitterClient extends OAuthBaseClient {
         client.get(apiUrl, params, handler);
     }
 
+    public void getMentionsTimeline(long max_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("statuses/mentions_timeline.json");
+        RequestParams params = new RequestParams();
+        params.put("count", Constants.tweetCount);
+        if (max_id != Constants.max_id_first_req) {
+            params.put("max_id", max_id);
+        }
+        client.get(apiUrl, params, handler);
+    }
+
+    public void getUserTimeline(String screen_name, long max_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("statuses/user_timeline.json");
+        RequestParams params = new RequestParams();
+        params.put("screen_name", screen_name);
+        params.put("count", Constants.tweetCount);
+        if (max_id != Constants.max_id_first_req) {
+            params.put("max_id", max_id);
+        }
+        client.get(apiUrl, params, handler);
+    }
+
     public void tweet(String status, AsyncHttpResponseHandler handler) {
         String apiUrl = getApiUrl("statuses/update.json");
         RequestParams params = new RequestParams();
@@ -72,7 +94,33 @@ public class TwitterClient extends OAuthBaseClient {
         client.get(apiUrl, handler);
     }
 
-    // FOR COMPOSE TWEET
+    public void favorite(long tweet_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("favorites/create.json");
+        RequestParams params = new RequestParams();
+        params.put("id", tweet_id);
+        client.post(apiUrl, params, handler);
+    }
+
+    public void defavorite(long tweet_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("favorites/destroy.json");
+        RequestParams params = new RequestParams();
+        params.put("id", tweet_id);
+        client.post(apiUrl, params, handler);
+    }
+
+    public void getSearchTimeline(String query,
+                                  String result_type,
+                                  long max_id,
+                                  AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("search/tweets.json");
+        RequestParams params = new RequestParams();
+        params.put("q", query);
+        params.put("result_type", result_type);
+        if (max_id != Constants.max_id_first_req) {
+            params.put("max_id", max_id);
+        }
+        client.get(apiUrl, params, handler);
+    }
 
     // Each method in here is an end point
 

@@ -1,5 +1,6 @@
 package com.codepath.apps.mysimpletweets.dialogs;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.text.Editable;
@@ -18,7 +19,7 @@ import android.widget.Toast;
 
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
-import com.codepath.apps.mysimpletweets.TwitterClient;
+import com.codepath.apps.mysimpletweets.net.TwitterClient;
 import com.codepath.apps.mysimpletweets.helpers.Constants;
 import com.codepath.apps.mysimpletweets.models.Tweet;
 import com.codepath.apps.mysimpletweets.models.User;
@@ -46,14 +47,17 @@ public class ReplyDialog extends DialogFragment {
 
     private User auth_user;
 
+    private ReplyDialogListener listener;
+
+    private static final String TAG = "REPLYDIALOG";
+
     public ReplyDialog() {
 
     }
 
-    public static ReplyDialog newInstance(User auth_user, String screen_name, long curr_status_uid) {
+    public static ReplyDialog newInstance(String screen_name, long curr_status_uid) {
         ReplyDialog frag = new ReplyDialog();
         Bundle args = new Bundle();
-        args.putParcelable(Constants.authUserKey, auth_user);
         args.putString("screen_name", screen_name);
         args.putLong("curr_status_uid", curr_status_uid);
         frag.setArguments(args);
@@ -72,7 +76,7 @@ public class ReplyDialog extends DialogFragment {
     }
 
     private void setupViews(View view) {
-        auth_user = getArguments().getParcelable(Constants.authUserKey);
+        auth_user = Constants.currentUser;
         String screen_name = getArguments().getString("screen_name");
         curr_status_uid = getArguments().getLong("curr_status_uid");
 
@@ -93,6 +97,17 @@ public class ReplyDialog extends DialogFragment {
         setupViewListeners();
 
         etNewTweet.append(Constants.twitterUserRef + screen_name + " ");
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof ReplyDialogListener) {
+            listener = (ReplyDialogListener) activity;
+        } else {
+            throw new ClassCastException(activity.toString()
+                    + " must implement ReplyDialog.ReplyDialogListener");
+        }
     }
 
     private void setupViewListeners() {
@@ -134,7 +149,6 @@ public class ReplyDialog extends DialogFragment {
         btnTweet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final ReplyDialogListener listener = (ReplyDialogListener) getActivity();
 
                 Tweet newTweet = new Tweet();
                 newTweet.setText(etNewTweet.getText().toString());
@@ -148,7 +162,6 @@ public class ReplyDialog extends DialogFragment {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject jsonObject) {
                         if (jsonObject != null) {
-                            Log.i("new tweet", "reaches here");
                             listener.onFinishReplyDialog(tweet_to_send);
                         } else {
                             Toast.makeText(getActivity(),
@@ -165,7 +178,7 @@ public class ReplyDialog extends DialogFragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.internet_error),
                                 Toast.LENGTH_SHORT).show();
-                        Log.i("COMPOSE", Constants.jsonError + " Throwable: " + t.toString() +
+                        Log.i(TAG, Constants.jsonError + " Throwable: " + t.toString() +
                                 " JSONObject: " + e.toString());
                     }
                 });
