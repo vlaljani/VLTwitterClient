@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
-import com.codepath.apps.mysimpletweets.TwitterClient;
+import com.codepath.apps.mysimpletweets.net.TwitterClient;
 import com.codepath.apps.mysimpletweets.helpers.Constants;
 import com.codepath.apps.mysimpletweets.models.Tweet;
 import com.codepath.apps.mysimpletweets.models.User;
@@ -45,6 +45,8 @@ public class ComposeDialog extends DialogFragment {
     private TextView tvCharCount;
     private Button btnTweet;
     private EditText etNewTweet;
+
+    private static final String TAG = "COMPOSEDIALOG";
 
     public ComposeDialog() {
 
@@ -135,6 +137,8 @@ public class ComposeDialog extends DialogFragment {
                 User user = getArguments().getParcelable(Constants.userKey);
                 newTweet.setUser(user);
                 newTweet.setCreated_at(getCurrentTimeStamp());
+                newTweet.setRetweet_count(0);
+                newTweet.setFavorites_count(0);
 
                 TwitterClient client = TwitterApplication.getRestClient();
                 client.tweet(etNewTweet.getText().toString(), new JsonHttpResponseHandler() {

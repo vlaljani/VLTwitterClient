@@ -18,5 +18,16 @@
     <string name="retweets">RETWEETS</string>
     <string name="favorites">FAVORITES</string>
     <string name="reply_to">Reply to</string>
+    <string name="my_profile">My Profile</string>
+    <string name="title_activity_profile">ProfileActivity</string>
+    <string name="tweets">TWEETS</string>
+    <string name="following">FOLLOWING</string>
+    <string name="followers">FOLLOWERS</string>
+    <string name="search">Search</string>
+    <string name="title_activity_search">SearchActivity</string>
+    <string name="top_tweets">Top Tweets</string>
+    <string name="all_tweets">All Tweets</string>
+    <string name="home">Home</string>
+    <string name="mentions">Mentions</string>
 
 </resources>

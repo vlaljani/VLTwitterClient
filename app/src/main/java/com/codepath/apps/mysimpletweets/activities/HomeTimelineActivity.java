@@ -1,283 +1,170 @@
 package com.codepath.apps.mysimpletweets.activities;
 
 import android.content.Intent;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBar;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.util.SQLiteUtils;
+import com.astuetz.PagerSlidingTabStrip;
 import com.codepath.apps.mysimpletweets.R;
+
 import com.codepath.apps.mysimpletweets.TwitterApplication;
-import com.codepath.apps.mysimpletweets.TwitterClient;
-import com.codepath.apps.mysimpletweets.adapters.TweetsAdapter;
 import com.codepath.apps.mysimpletweets.dialogs.ComposeDialog;
+import com.codepath.apps.mysimpletweets.dialogs.ReplyDialog;
+import com.codepath.apps.mysimpletweets.fragments.HomeTimelineFragment;
+import com.codepath.apps.mysimpletweets.fragments.MentionsTimelineFragment;
+import com.codepath.apps.mysimpletweets.fragments.TweetsListFragment;
 import com.codepath.apps.mysimpletweets.helpers.Constants;
-import com.codepath.apps.mysimpletweets.helpers.EndlessScrollListener;
 import com.codepath.apps.mysimpletweets.models.Tweet;
 import com.codepath.apps.mysimpletweets.models.User;
+import com.codepath.apps.mysimpletweets.net.TwitterClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
+import android.util.Log;
+import android.widget.Toast;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+
 import org.apache.http.Header;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import android.util.Log;
-import android.widget.Toast;
 
-public class HomeTimelineActivity extends ActionBarActivity implements ComposeDialog.ComposeDialogListener {
-
-    private ListView lvTweets;
-    private SwipeRefreshLayout swipeContainer;
-    private ArrayList<Tweet> tweetArrayList;
-    private TweetsAdapter tweetArrayAdapter;
-
-    private TwitterClient client;
+public class HomeTimelineActivity extends ActionBarActivity
+                                  implements ComposeDialog.ComposeDialogListener,
+                                             TweetsListFragment.OnItemSelectedListener,
+                                             ReplyDialog.ReplyDialogListener {
 
     // Tag to mark the logs
     private static final String TAG = "HOMETIMELINEACTIVITY";
-
-    private long curr_lowest_max_id = Constants.max_id_first_req;
-
-    // Currently authenticated user
-    private User currentUser;
-
+    private TwitterClient client;
+    private HomeTimelineFragment homeTimelineFragment;
+    private MentionsTimelineFragment mentionsTimelineFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_timeline);
-        setupViews();
-
         client = TwitterApplication.getRestClient();
         getCurrentUser();
-        populateTimeline(Constants.max_id_first_req);
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.custom_action_bar);
+
+        // Get the view pager (There's a view pager, and a view pager indicator, which displays
+        // which page you're on in the sliding tabs)
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+
+        // Set the view pager adapter for the pager
+        viewPager.setAdapter(new TweetsPagerAdapter(getSupportFragmentManager()));
+
+        // Find the pager sliding tabs
+        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+
+        // Attach the pager tabs to the view pager
+        tabs.setViewPager(viewPager);
     }
 
-    // Method to get the currently authenticated user
-    private void getCurrentUser() {
-        // Checking if the network is available
+    // This method is a callback from TweetListFragment if a tweet is clicked on in listview
+    // to get a detailed view in a new activity
+    public void onTweetItemSelected(Tweet tweet, User user) {
         if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
-            client.getCurrentUser(new JsonHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    // Delete any old authenticated users because there should be only one
-                    new Delete().from(User.class).where("is_current_user = ?", true).execute();
-                    currentUser = User.fromJson(response);
-                    currentUser.setIs_current_user(true);
-                    currentUser.save();
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject e) {
-                    Toast.makeText(HomeTimelineActivity.this,
-                            getResources().getString(R.string.sth_wrong),
-                            Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, Constants.jsonError + " Throwable: " + t.toString() +
-                            " JSONObject:  " + e.toString());
-
-                }
-            });
+            Intent i = new Intent(HomeTimelineActivity.this, TweetDetailActivity.class);
+            i.putExtra(Constants.tweetKey, tweet);
+            i.putExtra(Constants.userKey, user);
+            startActivityForResult(i, Constants.TWEET_DETAIL_REQ_CODE);
         } else {
-            Toast.makeText(this, getResources().getString(R.string.internet_error),
-                    Toast.LENGTH_SHORT).show();
-            currentUser = new Select()
-                        .from(User.class)
-                        .where("is_current_user = ?", true)
-                        .executeSingle();
-        }
-
-    }
-
-    private void setupViews() {
-        lvTweets = (ListView) findViewById(R.id.lvTweets);
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
-        swipeContainer.setColorSchemeResources(R.color.twitter_blue,
-                                               R.color.white,
-                                               R.color.twitter_blue,
-                                               R.color.white);
-
-        tweetArrayList = new ArrayList<>();
-        tweetArrayAdapter = new TweetsAdapter(this,tweetArrayList);
-        lvTweets.setAdapter(tweetArrayAdapter);
-
-        setupViewListeners();
-    }
-
-    private void setupViewListeners() {
-        /* Algorithm for pagination: If it's the first request, send only count. With every request
-         * keep track of the lowest tweet id returned. Use that as the max_id in the next request.
-         * For requests after the first, remove the first tweet returned because API requests with
-         * max_id are inclusive.
-         */
-        lvTweets.setOnScrollListener(new EndlessScrollListener() {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount) {
-                // No point scrolling further if we don't have network
-                if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
-                    populateTimeline(curr_lowest_max_id);
-                } else {
-                    Toast.makeText(HomeTimelineActivity.this,
-                            getResources().getString(R.string.internet_error),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        lvTweets.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
-                    Intent i = new Intent(HomeTimelineActivity.this, TweetDetailActivity.class);
-                    i.putExtra(Constants.tweetKey, tweetArrayList.get(position));
-                    i.putExtra(Constants.userKey, tweetArrayList.get(position).getUser());
-                    i.putExtra(Constants.authUserKey, currentUser);
-                    startActivityForResult(i, Constants.TWEET_DETAIL_REQ_CODE);
-                } else {
-                    Toast.makeText(HomeTimelineActivity.this,
-                            getResources().getString(R.string.internet_error),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // No point refreshing if we don't have data
-                if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
-                    curr_lowest_max_id = Constants.max_id_first_req;
-                    tweetArrayList.clear();
-                    new Delete().from(Tweet.class).execute();
-                    new Delete().from(User.class).where("is_current_user = ?", false).execute();
-                    tweetArrayAdapter.notifyDataSetChanged();
-                    populateTimeline(Constants.max_id_first_req);
-                } else {
-                    Toast.makeText(HomeTimelineActivity.this,
-                            getResources().getString(R.string.internet_error),
-                            Toast.LENGTH_SHORT).show();
-                }
-                swipeContainer.setRefreshing(false);
-
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check if we're back from the Tweet Detail activity
-        if (resultCode == RESULT_OK && requestCode == Constants.TWEET_DETAIL_REQ_CODE) {
-            Tweet newTweet = data.getParcelableExtra(Constants.newTweetKey);
-            Log.i("new tweet", "home " + (newTweet.getUser() == null));
-            newTweet.setUser(currentUser);
-            newTweet.save();
-            SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
-                    "WHERE uid=" + currentUser.getUid() + ")"
-                    +  " WHERE uid = "
-                    + newTweet.getuid());
-
-            ArrayList<Tweet> temp = new ArrayList<>();
-            temp.add(newTweet);
-            temp.addAll(tweetArrayList);
-            tweetArrayList.clear();
-            tweetArrayList.addAll(temp);
-            tweetArrayAdapter.notifyDataSetChanged();
-        }
-    }
-
-    // send an API request to get a timeline JSON and fill the list view
-    private void populateTimeline(final long max_id) {
-        // Call this API only if network is available
-        if (Constants.isNetworkAvailable(this)) {
-            client.getHomeTimeline(max_id, new JsonHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-
-                    if (response != null) {
-                        ArrayList<Tweet> tweets = Tweet.fromJSONArray(response);
-                        // Populate list with tweet
-                        if (tweets != null && tweets.size() > 0) {
-                            if (curr_lowest_max_id != Constants.max_id_first_req) {
-                                tweets.remove(0);
-                            }
-
-                            for (int i = 0; i < tweets.size(); i++) {
-                                User user_to_save = tweets.get(i).getUser();
-                                User.saveIf(user_to_save);
-                                Tweet.saveIf(tweets.get(i));
-
-                                SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
-                                        "WHERE uid=" + user_to_save.getUid() + ")"
-                                         +  " WHERE uid = "
-                                        + tweets.get(i).getuid());
-                            }
-                            tweetArrayList.addAll(tweets);
-                            tweetArrayAdapter.notifyDataSetChanged();
-                        }
-                        curr_lowest_max_id = tweets.get(0).getuid();
-                        for (int i = 1; i < tweets.size(); i++) {
-                            if (tweets.get(i).getuid() < curr_lowest_max_id) {
-                                curr_lowest_max_id = tweets.get(i).getuid();
-                            }
-                        }
-                    } else {
-                        Log.e(TAG, Constants.jsonError + " Tweets array null or empty");
-                        Toast.makeText(HomeTimelineActivity.this,
-                                getResources().getString(R.string.sth_wrong),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject e) {
-                    Log.e(TAG, Constants.jsonError + "  Throwable: " + t.toString()
-                            + " JSONObject: " + e.toString());
-                    Toast.makeText(HomeTimelineActivity.this,
-                            getResources().getString(R.string.sth_wrong),
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else { // Otherwise get the data from the DB
-            // Theoretically, the only way to get here is if the user opens the app after closing
-            // it because all other refresh scenarios (pull down/load more) prevent
-            // populateTimeline from being called
             Toast.makeText(HomeTimelineActivity.this,
                     getResources().getString(R.string.internet_error),
                     Toast.LENGTH_SHORT).show();
-
-            tweetArrayList.clear();
-            tweetArrayList.addAll(Tweet.getAll());
-            tweetArrayAdapter.notifyDataSetChanged();
         }
-
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check if we're back from the Tweet Detail activity with a reply
+        if (resultCode == RESULT_OK && requestCode == Constants.TWEET_DETAIL_REQ_CODE) {
+            Tweet newTweet = data.getParcelableExtra(Constants.newTweetKey);
+            tweetReplyGenericActions(newTweet);
+        }
     }
 
-    private void showComposeDialog() {
+    private ReplyDialog replyDialog;
+
+    // Callback when user hits reply button on a tweet in the tweetsListFragment/tweetAdapter and we
+    // need to open up a new dialog for user to type in the reply
+    public void showReplyDialog(String screen_name, long tweet_uid) {
+        String replyDialogTag = "fragment_reply_dialog";
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
-        ComposeDialog composeDialog = ComposeDialog.newInstance(currentUser);
-        composeDialog.show(fm, "fragment_all_comments");
+        replyDialog = ReplyDialog.newInstance(screen_name, tweet_uid);
+        replyDialog.show(fm, replyDialogTag);
     }
 
+    // Callback when user hits 'Tweet' in the reply dialog (for tweets in timeline as opposed to
+    // tweet detail activity)
+    public void onFinishReplyDialog(Tweet newTweet) {
+        replyDialog.dismiss();
+
+        tweetReplyGenericActions(newTweet);
+    }
+
+    // The set of actions that need to be performed for any reply (whether the reply was in detailed
+    // view or in fragment)
+    private void tweetReplyGenericActions(Tweet newTweet) {
+        newTweet.setUser(Constants.currentUser);
+        newTweet.save();
+        SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
+                "WHERE uid=" + Constants.currentUser.getUid() + ")"
+                +  " WHERE uid = "
+                + newTweet.getuid());
+
+        // Add tweet to the home timeline
+        ArrayList<Tweet> temp = new ArrayList<>();
+        temp.add(newTweet);
+        temp.addAll(homeTimelineFragment.getTweetArrayList());
+        homeTimelineFragment.clear();
+        homeTimelineFragment.addAll(temp);
+
+        // Add tweet to mentions timeline, if there's a mention of the authenticated user
+        if (newTweet.getText().contains(Constants.twitterUserRef +
+                Constants.currentUser.getScreen_name())) {
+            temp.clear();
+            temp.add(newTweet);
+            temp.addAll(mentionsTimelineFragment.getTweetArrayList());
+            mentionsTimelineFragment.clear();
+            mentionsTimelineFragment.addAll(temp);
+        }
+    }
+
+
+    // Method invoked when we hit the compose icon
+    private void showComposeDialog() {
+        String showComposeDialogTag = "fragment_compose";
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        ComposeDialog composeDialog = ComposeDialog.newInstance(Constants.currentUser);
+        composeDialog.show(fm, showComposeDialogTag);
+    }
+
+    // Listener callback when we hit Tweet on compose dialog
     public void onFinishComposeDialog(Tweet newTweet) {
         // Adding it manually because it's too soon to expect refresh to pick it up
         newTweet.save();
         SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
-                "WHERE uid=" + currentUser.getUid() + ")"
-                +  " WHERE uid = "
+                "WHERE uid=" + Constants.currentUser.getUid() + ")"
+                + " WHERE uid = "
                 + newTweet.getuid());
         ArrayList<Tweet> temp = new ArrayList<>();
         temp.add(newTweet);
-        temp.addAll(tweetArrayList);
-        tweetArrayList.clear();
-        tweetArrayList.addAll(temp);
-        tweetArrayAdapter.notifyDataSetChanged();
+        temp.addAll(homeTimelineFragment.getTweetArrayList());
+        homeTimelineFragment.clear();
+        homeTimelineFragment.addAll(temp);
     }
 
 
@@ -285,6 +172,25 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_home_timeline, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+
+        // When a user submits a query on the action bar search view, invoke this.
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String q) {
+                Intent i = new Intent(HomeTimelineActivity.this, SearchActivity.class);
+                i.putExtra(Constants.queryKey, q);
+                startActivity(i);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         return true;
     }
 
@@ -312,5 +218,112 @@ public class HomeTimelineActivity extends ActionBarActivity implements ComposeDi
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    // Return the order of the fragments in the viewPager
+    public class TweetsPagerAdapter extends FragmentPagerAdapter {
+        private String tabTitles[] = new String[] { getResources().getString(R.string.home),
+                                                    getResources().getString(R.string.mentions) };
+
+        // This is how the adapter gets manager to insert/remove fragments from activity
+        public TweetsPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public int getCount() {
+            return tabTitles.length;
+        }
+
+        // Order and creation of fragments within pager
+        @Override
+        public Fragment getItem(int position) {
+            if (position == 0) {
+                // Edit: Doing this so that we can update the home timeline by referring to it
+                //return new HomeTimelineFragment();
+                homeTimelineFragment = new HomeTimelineFragment();
+                return homeTimelineFragment;
+            } else if (position == 1) {
+                mentionsTimelineFragment = new MentionsTimelineFragment();
+                return mentionsTimelineFragment;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            // Generate title based on item position
+            return tabTitles[position];
+        }
+
+    }
+
+    public void onProfileView(MenuItem mi) {
+        // Launch profile view
+        Intent i = new Intent(HomeTimelineActivity.this, ProfileActivity.class);
+        i.putExtra(Constants.userKey, Constants.currentUser);
+        startActivity(i);
+    }
+
+    // Method to get the currently authenticated user
+    private void getCurrentUser() {
+        // Checking if the network is available
+        Log.i(TAG, "goes here");
+        if (Constants.isNetworkAvailable(this)) {
+            client.getCurrentUser(new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    // Delete any old authenticated users because there should be only one
+                    Log.i(TAG, "goes here 1");
+                    Constants.currentUser = User.fromJson(response);
+                    Log.i(TAG, "here 2");
+                    Constants.currentUser.setIs_current_user(true);
+                    Log.i(TAG, "here 3");
+                    new Delete().from(User.class).where("is_current_user = ?", true).execute();
+                    Constants.currentUser.save();
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject e) {
+                    Toast.makeText(HomeTimelineActivity.this,
+                            getResources().getString(R.string.sth_wrong),
+                            Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, Constants.jsonError + " Throwable: " + t.toString() +
+                            " JSONObject:  " + e.toString());
+
+                }
+            });
+            /*client.getCurrentUser(new TextHttpResponseHandler() {
+                                      @Override
+                                      public void onStart() {
+                                          // Initiated the request
+                                      }
+
+                                      public void onSuccess(int statusCode, Header[] header, String responseBody) {
+                                          Log.i(TAG, responseBody);
+                                      }
+
+                                      public void onFailure(int statusCode, Header[] header, String responseBody, Throwable e) {
+                                          // Response failed :(
+                                          Log.i(TAG, responseBody + e.toString());
+                                      }
+
+                                      @Override
+                                      public void onFinish() {
+                                          // Completed the request (either success or failure)
+                                      }
+                                  }
+            );*/
+        } else {
+            Toast.makeText(this, getResources().getString(R.string.internet_error),
+                    Toast.LENGTH_SHORT).show();
+            Constants.currentUser = new Select()
+                    .from(User.class)
+                    .where("is_current_user = ?", true)
+                    .executeSingle();
+        }
+        Log.i(TAG, "hmm");
+        //Log.i(TAG, Constants.currentUser.getScreen_name() + " is done");
     }
 }

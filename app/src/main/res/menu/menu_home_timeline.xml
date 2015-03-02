@@ -2,14 +2,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.codepath.apps.mysimpletweets.activities.HomeTimelineActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
 
     <item
         android:id="@+id/compose"
         android:icon="@drawable/ic_compose"
         app:showAsAction="always"
         android:title="@string/new_tweet"
-        android:orderInCategory="6">
+        android:orderInCategory="5">
     </item>
+
+    <item
+        android:id="@+id/profile"
+        android:icon="@drawable/ic_profile"
+        app:showAsAction="always"
+        android:title="@string/my_profile"
+        android:onClick="onProfileView"
+        android:orderInCategory="6"/>
+
+    <item android:id="@+id/action_search"
+        android:orderInCategory="4"
+        android:title="Search"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="always|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView" />
 </menu>

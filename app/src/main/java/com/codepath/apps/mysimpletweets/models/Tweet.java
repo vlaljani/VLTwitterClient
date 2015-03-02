@@ -27,6 +27,7 @@ import java.util.Date;
  * Parse the JSON + store the data. Encapsulate state/display logic.
  */
 @Table(name = "Tweets")
+
 public class Tweet extends Model implements Parcelable {
 
     // Tag to mark logs
@@ -65,6 +66,28 @@ public class Tweet extends Model implements Parcelable {
 
     @Column(name = "favorites_count")
     private int favorites_count;
+
+    @Column(name = "favorited")
+    private boolean favorited;
+
+    @Column(name = "retweeted")
+    private boolean retweeted;
+
+    public boolean isRetweeted() {
+        return retweeted;
+    }
+
+    public void setRetweeted(boolean retweeted) {
+        this.retweeted = retweeted;
+    }
+
+    public boolean isFavorited() {
+        return favorited;
+    }
+
+    public void setFavorited(boolean favorited) {
+        this.favorited = favorited;
+    }
 
     //private ArrayList<String> media_urls;
     private String media_url;
@@ -146,9 +169,12 @@ public class Tweet extends Model implements Parcelable {
         String media_urlKey = "media_url";
         String favCountKey = "favorite_count";
         String retweetCountKey = "retweet_count";
+        String favoritedKey = "favorited";
+        String retweetedKey = "retweeted";
 
         // Extract values from JSON
         try {
+
             tweet.text = jsonObject.getString(tweetTextKey);
             tweet.created_at = jsonObject.getString(tweetCreatedAtKey);
             tweet.uid = jsonObject.getLong(tweetUidKey);
@@ -156,6 +182,8 @@ public class Tweet extends Model implements Parcelable {
             tweet.timestamp = setDateFromString(tweet.created_at);
             tweet.retweet_count = jsonObject.getInt(retweetCountKey);
             tweet.favorites_count = jsonObject.getInt(favCountKey);
+            tweet.favorited = jsonObject.getBoolean(favoritedKey);
+            tweet.retweeted = jsonObject.getBoolean(retweetedKey);
 
             //tweet.media_urls = new ArrayList<>();
             tweet.media_url = null;
@@ -212,6 +240,8 @@ public class Tweet extends Model implements Parcelable {
         this.retweet_count = in.readInt();
         this.favorites_count = in.readInt();
         this.media_url = in.readString();
+        this.favorited = in.readByte() != 0;
+        this.retweeted = in.readByte() != 0;
     }
 
     public void writeToParcel(Parcel dest, int flags) {
@@ -221,6 +251,8 @@ public class Tweet extends Model implements Parcelable {
         dest.writeInt(retweet_count);
         dest.writeInt(favorites_count);
         dest.writeString(media_url);
+        dest.writeByte((byte) (favorited ? 1 : 0));
+        dest.writeByte((byte) (retweeted ? 1 : 0));
     }
 
     public int describeContents() {
@@ -240,4 +272,11 @@ public class Tweet extends Model implements Parcelable {
         }
     };
 
+    public void setRetweet_count(int retweet_count) {
+        this.retweet_count = retweet_count;
+    }
+
+    public void setFavorites_count(int favorites_count) {
+        this.favorites_count = favorites_count;
+    }
 }

@@ -1,0 +1,21 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.codepath.apps.mysimpletweets.activities.ProfileActivity"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/fragProfileHeader"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/zero_width"
+        android:layout_weight="2"
+        />
+
+    <FrameLayout
+        android:id="@+id/fragUserTimeline"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/zero_width"
+        android:layout_weight="3"
+        />
+
+</LinearLayout>
