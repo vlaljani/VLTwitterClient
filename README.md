@@ -62,9 +62,16 @@ Codepath jars for OAuth
 
 [Pager Sliding Tab Strip](https://github.com/astuetz/PagerSlidingTabStrip)
 
+Video Walk Through (Week 4)
+
 ![Video Walk Through (Week 4)](Week4VideoWalkthrough.gif)
 
+Video Walk Through (Infinite Scrolling)
+
 ![Video Walk Through (Infinite Scrolling)](Week4VideoWalkthroughInfiniteScrolling.gif)
+
+Video Walk Through (Indeterminate Progress Bar) 
+![Video Walk Through (Indeterminate Progress Bar)](Week4VideoWalkthroughIndeterminateProgressBar.gif)
 
 
 Video Walk Through: 
