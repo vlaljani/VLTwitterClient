@@ -40,7 +40,9 @@ Completed user stories:
  * [x] Required: User can click on the profile image in any tweet to see another user's profile.
       - User can see picture, tagline, # of followers, # of following, and tweets of clicked user.
       - Their timeline
- * User can infinitely paginate any of these timelines (home, mentions, user) by scrolling to the bottom -- I know this is required and it was working till this morning. However, I played around with some stuff to try to have more in the abstract class and it suddenly doesn't work anymore. The odd thing is that it doesn't even return all the 25 of the original - only 19. I am working on this and will update the project. 
+ * [x] User can infinitely paginate any of these timelines (home, mentions, user) by scrolling to the bottom -- I know this is required and it was working till this morning (it was even working in last week's submission). 
+~9:30: However, I played around with some stuff to try to have more in the abstract class and it suddenly doesn't work anymore. The odd thing is that it doesn't even return all the 25 of the original - only 19. I am working on this and will update the project. 
+~9:42 Edit: It seems to be working now. I think it was just hitting a weird rate limit thing. I have a licecap recording which shows about 45 tweets in the home timeline. Please let me know if there's sth else I can do to show this. 
  * [x] Advanced: User can "reply" to any tweet on their home timeline - and the user that wrote the original tweet is automatically "@" replied in compose
  * [x] Advanced: User can click on a tweet to be taken to a "detail view" of that tweet
  * [x] Advanced: User can take favorite/unfavorite/retweet actions on any timeline + the detail view of a tweet
