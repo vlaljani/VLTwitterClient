@@ -2,7 +2,7 @@
 
 This is an Android application for a simple Twitter Client, which allows a user to view a Twitter timeline and compose a tweet.
 
-Time Spent: ~20 - 22 hours 
+Time Spent: ~20 - 22 hours + ~22 - 25 hours
 Completed user stories:
 
  * [x] Required: User can sign in to Twitter using OAuth login.
@@ -33,6 +33,21 @@ Completed user stories:
  * [x] Bonus: User can see embedded image media within the tweet detail view
  * [x] Bonus: Compose activity is replaced with a modal overlay 
  
+ * [x] Required: User can switch between Timeline and Mention views using tabs.
+       - User can view their home timeline tweets.
+       - User can view the recent mentions of their username.
+ * [x] Required: User can navigate to view their own profile to see picture, tagline, # followers, # following, # tweets and the tweets
+ * [x] Required: User can click on the profile image in any tweet to see another user's profile.
+      - User can see picture, tagline, # of followers, # of following, and tweets of clicked user.
+      - Their timeline
+ * User can infinitely paginate any of these timelines (home, mentions, user) by scrolling to the bottom -- I know this is required and it was working till this morning. However, I played around with some stuff to try to have more in the abstract class and it suddenly doesn't work anymore. The odd thing is that it doesn't even return all the 25 of the original - only 19. I am working on this and will update the project. 
+ * [x] Advanced: User can "reply" to any tweet on their home timeline - and the user that wrote the original tweet is automatically "@" replied in compose
+ * [x] Advanced: User can click on a tweet to be taken to a "detail view" of that tweet
+ * [x] Advanced: User can take favorite/unfavorite/retweet actions on any timeline + the detail view of a tweet
+ * [x] Advanced: Advanced: Improve the user interface and theme the app to feel twitter branded
+       - All the screens (detailed tweet view, action bars, timelines, user profiles, favorite, retweet colors) have been mimicked to look like the original Twitter client in terms of arrangement and colors.
+ * [x] Advanced: User can search for tweets matching a particular query and see results + you can see the top tweets and all tweets using sliding tabgs just like the Twitter client
+ 
 Libraries that helped make the project easier :-)
 
 [Android async-http](http://loopj.com/android-async-http/) to make calls to the Google API
@@ -42,6 +57,11 @@ Libraries that helped make the project easier :-)
 [ActiveAndroid](https://github.com/pardom/ActiveAndroid/wiki/Getting-started) to help persist to SQLLite DB
 
 Codepath jars for OAuth
+
+[Pager Sliding Tab Strip](https://github.com/astuetz/PagerSlidingTabStrip)
+
+Video Walk Through (Week 4):(Week4VideoWalkthrough.gif)
+
 
 Video Walk Through: 
 
