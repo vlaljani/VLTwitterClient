@@ -60,7 +60,7 @@ Codepath jars for OAuth
 
 [Pager Sliding Tab Strip](https://github.com/astuetz/PagerSlidingTabStrip)
 
-Video Walk Through (Week 4):(Week4VideoWalkthrough.gif)
+![Video Walk Through (Week 4)](Week4VideoWalkthrough.gif)
 
 
 Video Walk Through: 
