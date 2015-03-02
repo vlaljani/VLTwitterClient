@@ -70,6 +70,17 @@ public class Tweet extends Model implements Parcelable {
     @Column(name = "favorited")
     private boolean favorited;
 
+    @Column(name = "retweeted")
+    private boolean retweeted;
+
+    public boolean isRetweeted() {
+        return retweeted;
+    }
+
+    public void setRetweeted(boolean retweeted) {
+        this.retweeted = retweeted;
+    }
+
     public boolean isFavorited() {
         return favorited;
     }
@@ -159,9 +170,11 @@ public class Tweet extends Model implements Parcelable {
         String favCountKey = "favorite_count";
         String retweetCountKey = "retweet_count";
         String favoritedKey = "favorited";
+        String retweetedKey = "retweeted";
 
         // Extract values from JSON
         try {
+
             tweet.text = jsonObject.getString(tweetTextKey);
             tweet.created_at = jsonObject.getString(tweetCreatedAtKey);
             tweet.uid = jsonObject.getLong(tweetUidKey);
@@ -170,6 +183,7 @@ public class Tweet extends Model implements Parcelable {
             tweet.retweet_count = jsonObject.getInt(retweetCountKey);
             tweet.favorites_count = jsonObject.getInt(favCountKey);
             tweet.favorited = jsonObject.getBoolean(favoritedKey);
+            tweet.retweeted = jsonObject.getBoolean(retweetedKey);
 
             //tweet.media_urls = new ArrayList<>();
             tweet.media_url = null;
@@ -227,6 +241,7 @@ public class Tweet extends Model implements Parcelable {
         this.favorites_count = in.readInt();
         this.media_url = in.readString();
         this.favorited = in.readByte() != 0;
+        this.retweeted = in.readByte() != 0;
     }
 
     public void writeToParcel(Parcel dest, int flags) {
@@ -237,6 +252,7 @@ public class Tweet extends Model implements Parcelable {
         dest.writeInt(favorites_count);
         dest.writeString(media_url);
         dest.writeByte((byte) (favorited ? 1 : 0));
+        dest.writeByte((byte) (retweeted ? 1 : 0));
     }
 
     public int describeContents() {

@@ -5,7 +5,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import com.codepath.apps.mysimpletweets.models.User;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 
 /**
  * Created by vibhalaljani on 2/19/15.
@@ -29,6 +28,13 @@ public class Constants {
     public static final String allTweetsKey = "mixed";
     public static final String resultTypeKey = "result_type";
     public static final String queryKey = "query";
+    public static final String favResponseNull = " Favorite response null.";
+    public static final String defavResponseNull = " Defavorite response null.";
+    public static final String screenNameKey = "screen_name";
+    public static final String currTweetUidKey = "curr_status_uid";
+    public static final String tweetsArrEmpty = " Tweets array null or empty";
+    public static final float retweetDisableAlpha = 0.60F;
+    public static final float retweetEnableAlpha = 1.0F;
 
     // This method determines if the mobile device is connected to the internet
     public static Boolean isNetworkAvailable(Context context) {

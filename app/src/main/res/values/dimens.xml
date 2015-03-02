@@ -14,5 +14,6 @@
     <dimen name="createdAtSize">10sp</dimen>
     <dimen name="activity_margin_double">32dp</dimen>
     <dimen name="border">2dp</dimen>
+    <dimen name="title_size">18sp</dimen>
 
 </resources>

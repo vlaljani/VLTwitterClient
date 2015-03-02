@@ -5,6 +5,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.view.Menu;
@@ -55,6 +56,8 @@ public class HomeTimelineActivity extends ActionBarActivity
         setContentView(R.layout.activity_home_timeline);
         client = TwitterApplication.getRestClient();
         getCurrentUser();
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.custom_action_bar);
 
         // Get the view pager (There's a view pager, and a view pager indicator, which displays
         // which page you're on in the sliding tabs)
@@ -70,6 +73,8 @@ public class HomeTimelineActivity extends ActionBarActivity
         tabs.setViewPager(viewPager);
     }
 
+    // This method is a callback from TweetListFragment if a tweet is clicked on in listview
+    // to get a detailed view in a new activity
     public void onTweetItemSelected(Tweet tweet, User user) {
         if (Constants.isNetworkAvailable(HomeTimelineActivity.this)) {
             Intent i = new Intent(HomeTimelineActivity.this, TweetDetailActivity.class);
@@ -84,25 +89,17 @@ public class HomeTimelineActivity extends ActionBarActivity
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check if we're back from the Tweet Detail activity
+        // Check if we're back from the Tweet Detail activity with a reply
         if (resultCode == RESULT_OK && requestCode == Constants.TWEET_DETAIL_REQ_CODE) {
             Tweet newTweet = data.getParcelableExtra(Constants.newTweetKey);
-            newTweet.setUser(Constants.currentUser);
-            newTweet.save();
-            SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
-                    "WHERE uid=" + Constants.currentUser.getUid() + ")"
-                    +  " WHERE uid = "
-                    + newTweet.getuid());
-
-            ArrayList<Tweet> temp = new ArrayList<>();
-            temp.add(newTweet);
-            temp.addAll(homeTimelineFragment.getTweetArrayList());
-            homeTimelineFragment.clear();
-            homeTimelineFragment.addAll(temp);
+            tweetReplyGenericActions(newTweet);
         }
     }
 
     private ReplyDialog replyDialog;
+
+    // Callback when user hits reply button on a tweet in the tweetsListFragment/tweetAdapter and we
+    // need to open up a new dialog for user to type in the reply
     public void showReplyDialog(String screen_name, long tweet_uid) {
         String replyDialogTag = "fragment_reply_dialog";
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
@@ -110,15 +107,42 @@ public class HomeTimelineActivity extends ActionBarActivity
         replyDialog.show(fm, replyDialogTag);
     }
 
+    // Callback when user hits 'Tweet' in the reply dialog (for tweets in timeline as opposed to
+    // tweet detail activity)
     public void onFinishReplyDialog(Tweet newTweet) {
         replyDialog.dismiss();
 
+        tweetReplyGenericActions(newTweet);
+    }
+
+    // The set of actions that need to be performed for any reply (whether the reply was in detailed
+    // view or in fragment)
+    private void tweetReplyGenericActions(Tweet newTweet) {
+        newTweet.setUser(Constants.currentUser);
+        newTweet.save();
+        SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
+                "WHERE uid=" + Constants.currentUser.getUid() + ")"
+                +  " WHERE uid = "
+                + newTweet.getuid());
+
+        // Add tweet to the home timeline
         ArrayList<Tweet> temp = new ArrayList<>();
         temp.add(newTweet);
         temp.addAll(homeTimelineFragment.getTweetArrayList());
         homeTimelineFragment.clear();
         homeTimelineFragment.addAll(temp);
+
+        // Add tweet to mentions timeline, if there's a mention of the authenticated user
+        if (newTweet.getText().contains(Constants.twitterUserRef +
+                Constants.currentUser.getScreen_name())) {
+            temp.clear();
+            temp.add(newTweet);
+            temp.addAll(mentionsTimelineFragment.getTweetArrayList());
+            mentionsTimelineFragment.clear();
+            mentionsTimelineFragment.addAll(temp);
+        }
     }
+
 
     // Method invoked when we hit the compose icon
     private void showComposeDialog() {
@@ -156,7 +180,6 @@ public class HomeTimelineActivity extends ActionBarActivity
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String q) {
-                Toast.makeText(HomeTimelineActivity.this, q, Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(HomeTimelineActivity.this, SearchActivity.class);
                 i.putExtra(Constants.queryKey, q);
                 startActivity(i);
@@ -246,14 +269,18 @@ public class HomeTimelineActivity extends ActionBarActivity
     // Method to get the currently authenticated user
     private void getCurrentUser() {
         // Checking if the network is available
+        Log.i(TAG, "goes here");
         if (Constants.isNetworkAvailable(this)) {
             client.getCurrentUser(new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     // Delete any old authenticated users because there should be only one
-                    new Delete().from(User.class).where("is_current_user = ?", true).execute();
+                    Log.i(TAG, "goes here 1");
                     Constants.currentUser = User.fromJson(response);
+                    Log.i(TAG, "here 2");
                     Constants.currentUser.setIs_current_user(true);
+                    Log.i(TAG, "here 3");
+                    new Delete().from(User.class).where("is_current_user = ?", true).execute();
                     Constants.currentUser.save();
                 }
 
@@ -267,6 +294,27 @@ public class HomeTimelineActivity extends ActionBarActivity
 
                 }
             });
+            /*client.getCurrentUser(new TextHttpResponseHandler() {
+                                      @Override
+                                      public void onStart() {
+                                          // Initiated the request
+                                      }
+
+                                      public void onSuccess(int statusCode, Header[] header, String responseBody) {
+                                          Log.i(TAG, responseBody);
+                                      }
+
+                                      public void onFailure(int statusCode, Header[] header, String responseBody, Throwable e) {
+                                          // Response failed :(
+                                          Log.i(TAG, responseBody + e.toString());
+                                      }
+
+                                      @Override
+                                      public void onFinish() {
+                                          // Completed the request (either success or failure)
+                                      }
+                                  }
+            );*/
         } else {
             Toast.makeText(this, getResources().getString(R.string.internet_error),
                     Toast.LENGTH_SHORT).show();
@@ -275,6 +323,7 @@ public class HomeTimelineActivity extends ActionBarActivity
                     .where("is_current_user = ?", true)
                     .executeSingle();
         }
-
+        Log.i(TAG, "hmm");
+        //Log.i(TAG, Constants.currentUser.getScreen_name() + " is done");
     }
 }

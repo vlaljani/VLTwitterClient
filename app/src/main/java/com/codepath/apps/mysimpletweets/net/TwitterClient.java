@@ -1,15 +1,12 @@
 package com.codepath.apps.mysimpletweets.net;
 
-import org.json.JSONArray;
 import org.scribe.builder.api.Api;
-import org.scribe.builder.api.FlickrApi;
 import org.scribe.builder.api.TwitterApi;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.codepath.apps.mysimpletweets.helpers.Constants;
-import com.codepath.apps.mysimpletweets.models.User;
 import com.codepath.oauth.OAuthBaseClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -91,7 +88,9 @@ public class TwitterClient extends OAuthBaseClient {
 
     public void getCurrentUser(AsyncHttpResponseHandler handler) {
         String apiUrl = getApiUrl("account/verify_credentials.json");
+        Log.i("Client", "HERE 4");
         client.get(apiUrl, handler);
+        Log.i("Client", "HERE 5");
     }
 
     public void favorite(long tweet_id, AsyncHttpResponseHandler handler) {
@@ -99,6 +98,13 @@ public class TwitterClient extends OAuthBaseClient {
         RequestParams params = new RequestParams();
         params.put("id", tweet_id);
         client.post(apiUrl, params, handler);
+    }
+
+    public void retweet(long tweet_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("statuses/retweet/" + tweet_id + ".json");
+        //RequestParams params = new RequestParams();
+        //params.put("id", tweet_id);
+        client.post(apiUrl, handler);
     }
 
     public void defavorite(long tweet_id, AsyncHttpResponseHandler handler) {

@@ -2,10 +2,6 @@ package com.codepath.apps.mysimpletweets.adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,29 +13,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.activeandroid.util.SQLiteUtils;
+import com.activeandroid.query.Select;
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
 import com.codepath.apps.mysimpletweets.activities.HomeTimelineActivity;
 import com.codepath.apps.mysimpletweets.activities.ProfileActivity;
-import com.codepath.apps.mysimpletweets.dialogs.ReplyDialog;
 import com.codepath.apps.mysimpletweets.helpers.Constants;
 import com.codepath.apps.mysimpletweets.models.Tweet;
-import com.codepath.apps.mysimpletweets.models.User;
 import com.codepath.apps.mysimpletweets.net.TwitterClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.squareup.picasso.Picasso;
 
 
 import org.apache.http.Header;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -62,6 +52,7 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
         TextView tvFavorites;
         ImageView ivFav;
         ImageView ivReply;
+        ImageView ivRetweet;
     }
     public TweetsAdapter(Context context, List<Tweet> tweets) {
         super(context, android.R.layout.simple_list_item_1, tweets);
@@ -85,6 +76,7 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
             viewHolder.tvFavorites = (TextView) convertView.findViewById(R.id.tvFav);
             viewHolder.ivFav = (ImageView) convertView.findViewById(R.id.ivFav);
             viewHolder.ivReply = (ImageView) convertView.findViewById(R.id.ivReply);
+            viewHolder.ivRetweet = (ImageView) convertView.findViewById(R.id.ivRetweet);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
@@ -104,6 +96,56 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
                 }
 
             }
+        });
+
+        viewHolder.ivRetweet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TwitterClient client = TwitterApplication.getRestClient();
+                    if (Constants.isNetworkAvailable(getContext())) {
+                        client.retweet(currTweet.getuid(), new JsonHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode,
+                                                  Header[] headers,
+                                                  JSONObject response) {
+
+                                if (response != null) {
+                                    currTweet.setRetweeted(true);
+                                    viewHolder.ivRetweet.setImageResource(R.drawable.ic_retweeted);
+                                    currTweet.setRetweet_count(currTweet.getRetweet_count() + 1);
+                                    viewHolder.tvRetweet.setTextColor(getContext().getResources().
+                                                                   getColor(R.color.retweet_green));
+                                    viewHolder.tvRetweet.setText(String.valueOf(
+                                                                     currTweet.getRetweet_count()));
+                                    Tweet isExistingTweet = new Select().from(Tweet.class).
+                                            where("uid = ?", currTweet.getuid()).executeSingle();
+                                    if (isExistingTweet != null) {
+                                        currTweet.save();
+                                    }
+                                } else {
+                                    Log.e(TAG, Constants.jsonError + Constants.defavResponseNull);
+                                    Toast.makeText(getContext(),
+                                            getContext().getResources().getString(R.string.sth_wrong),
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers,
+                                                  Throwable t, JSONObject e) {
+                                Log.e(TAG, Constants.jsonError + "  Throwable: " + t.toString()
+                                        + " JSONObject: " + e.toString());
+                                Toast.makeText(getContext(),
+                                        getContext().getResources().getString(R.string.sth_wrong),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getContext(),
+                                getContext().getResources().getString(R.string.internet_error),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
         });
 
         viewHolder.ivFav.setOnClickListener(new View.OnClickListener() {
@@ -130,10 +172,13 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
                                     } else {
                                         viewHolder.tvFavorites.setText("");
                                     }
-                                    currTweet.save();
-
+                                    Tweet isExistingTweet = new Select().from(Tweet.class).
+                                            where("uid = ?", currTweet.getuid()).executeSingle();
+                                    if (isExistingTweet != null) {
+                                        currTweet.save();
+                                    }
                                 } else {
-                                    Log.e(TAG, Constants.jsonError + "  Defavorite response null.");
+                                    Log.e(TAG, Constants.jsonError + Constants.defavResponseNull);
                                     Toast.makeText(getContext(),
                                             getContext().getResources().getString(R.string.sth_wrong),
                                             Toast.LENGTH_SHORT).show();
@@ -171,9 +216,13 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
                                             getColor(R.color.favorite_orange));
                                     viewHolder.tvFavorites.setText(String.valueOf(
                                                                    currTweet.getFavorites_count()));
-                                    currTweet.save();
+                                    Tweet isExistingTweet = new Select().from(Tweet.class).
+                                               where("uid = ?", currTweet.getuid()).executeSingle();
+                                    if (isExistingTweet != null) {
+                                        currTweet.save();
+                                    }
                                 } else {
-                                    Log.e(TAG, Constants.jsonError + "  Defavorite response null.");
+                                    Log.e(TAG, Constants.jsonError + Constants.favResponseNull);
                                     Toast.makeText(getContext(),
                                             getContext().getResources().getString(R.string.sth_wrong),
                                             Toast.LENGTH_SHORT).show();
@@ -204,7 +253,26 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
         viewHolder.tvCreatedAt.setText(getRelativeTimeAgo(currTweet.getCreated_at()));
         viewHolder.tvTweet.setText(currTweet.getText());
 
+        // Reset everything
+        viewHolder.ivRetweet.setImageResource(R.drawable.ic_retweet);
         viewHolder.tvRetweet.setText("");
+        viewHolder.tvRetweet.setTextColor(getContext().getResources().getColor(R.color.dark_gray));
+        viewHolder.ivRetweet.setEnabled(true);
+        viewHolder.ivRetweet.setAlpha(Constants.retweetEnableAlpha);
+
+        // If current user's tweet, disable the retweet button
+        Log.i(TAG, "curr_user " + currTweet.getUser().getScreen_name());
+        Log.i(TAG, "auth_user " + Constants.currentUser.getScreen_name());
+        if (currTweet.getUser().getScreen_name().equals(Constants.currentUser.getScreen_name())) {
+            viewHolder.ivRetweet.setEnabled(false);
+            viewHolder.ivRetweet.setAlpha(Constants.retweetDisableAlpha);
+        }
+        if (currTweet.isRetweeted()) {
+            viewHolder.ivRetweet.setImageResource(R.drawable.ic_retweeted);
+            viewHolder.tvRetweet.setTextColor(getContext().getResources().getColor(
+                    R.color.retweet_green));
+            viewHolder.ivRetweet.setEnabled(false);
+        }
         if (currTweet.getRetweet_count() > 0) {
             viewHolder.tvRetweet.setText(String.valueOf(currTweet.getRetweet_count()));
         } else {
@@ -214,16 +282,15 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
         viewHolder.ivFav.setImageResource(R.drawable.ic_fav);
         viewHolder.tvFavorites.setText("");
         viewHolder.tvFavorites.setTextColor(getContext().getResources().getColor(R.color.dark_gray));
-        if (currTweet.getFavorites_count() > 0) {
-            viewHolder.tvFavorites.setText(String.valueOf(currTweet.getFavorites_count()));
-        } else {
-            viewHolder.tvRetweet.setText("");
-        }
-
         if (currTweet.isFavorited()) {
             viewHolder.ivFav.setImageResource(R.drawable.ic_favorited);
             viewHolder.tvFavorites.setTextColor(getContext().getResources().
                     getColor(R.color.favorite_orange));
+        }
+        if (currTweet.getFavorites_count() > 0) {
+            viewHolder.tvFavorites.setText(String.valueOf(currTweet.getFavorites_count()));
+        } else {
+            viewHolder.tvFavorites.setText("");
         }
 
         if (currTweet.getUser().getProfile_image_url() != null) {
@@ -231,7 +298,6 @@ public class TweetsAdapter extends ArrayAdapter<Tweet> {
             Picasso.with(getContext()).load(currTweet.getUser().getProfile_image_url()).
                     into(viewHolder.ivProfPic);
         }
-        viewHolder.ivProfPic.setTag(currTweet.getUser().getScreen_name());
         viewHolder.ivProfPic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

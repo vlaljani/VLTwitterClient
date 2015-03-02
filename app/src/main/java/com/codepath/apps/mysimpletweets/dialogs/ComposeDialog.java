@@ -46,6 +46,8 @@ public class ComposeDialog extends DialogFragment {
     private Button btnTweet;
     private EditText etNewTweet;
 
+    private static final String TAG = "COMPOSEDIALOG";
+
     public ComposeDialog() {
 
     }

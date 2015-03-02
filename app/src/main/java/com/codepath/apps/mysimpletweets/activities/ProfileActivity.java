@@ -2,9 +2,9 @@ package com.codepath.apps.mysimpletweets.activities;
 
 import android.content.Intent;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 
 public class ProfileActivity extends ActionBarActivity
                              implements TweetsListFragment.OnItemSelectedListener,
-                                        ReplyDialog.ReplyDialogListener{
+                                        ReplyDialog.ReplyDialogListener {
 
     private static final String TAG = "PROFILEACTIVITY";
     private UserTimelineFragment fragmentUserTimeline;
@@ -33,14 +33,19 @@ public class ProfileActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // Get the uid
+        ActionBar actionBar = getSupportActionBar();
+        //actionBar.setDisplayHomeAsUpEnabled(true);
+
+        // Get the user, if they're being called by clicking an image of another profile
+        // Otherwise this activity was called by hitting the profile icon, so the user is the
+        // authenticated user
         User curr_user = getIntent().getParcelableExtra(Constants.userKey);
         if (curr_user == null) {
             curr_user = Constants.currentUser;
         }
 
         String screen_name = curr_user.getScreen_name();
-        getSupportActionBar().setTitle(Constants.twitterUserRef + screen_name);
+        actionBar.setTitle(Constants.twitterUserRef + screen_name);
 
         if (savedInstanceState == null) {
             // Create the user timeline fragment
@@ -57,6 +62,7 @@ public class ProfileActivity extends ActionBarActivity
 
     }
 
+    // Callback if a tweet is selected in the listview in the user timeline to go into detailed view
     public void onTweetItemSelected(Tweet tweet, User user) {
         if (Constants.isNetworkAvailable(ProfileActivity.this)) {
             Intent i = new Intent(ProfileActivity.this, TweetDetailActivity.class);
@@ -72,25 +78,16 @@ public class ProfileActivity extends ActionBarActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check if we're back from the Tweet Detail activity
+        // Check if we're back from the Tweet Detail activity w/ a reply
         if (resultCode == RESULT_OK && requestCode == Constants.TWEET_DETAIL_REQ_CODE) {
             Tweet newTweet = data.getParcelableExtra(Constants.newTweetKey);
-            newTweet.setUser(Constants.currentUser);
-            newTweet.save();
-            SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
-                    "WHERE uid=" + Constants.currentUser.getUid() + ")"
-                    + " WHERE uid = "
-                    + newTweet.getuid());
-
-            ArrayList<Tweet> temp = new ArrayList<>();
-            temp.add(newTweet);
-            temp.addAll(fragmentUserTimeline.getTweetArrayList());
-            fragmentUserTimeline.clear();
-            fragmentUserTimeline.addAll(temp);
+            tweetReplyGenericActions(newTweet);
         }
     }
 
     private ReplyDialog replyDialog;
+
+    //Callback method for when reply button is clicked on a tweet in the listview
     public void showReplyDialog(String screen_name, long tweet_uid) {
         String replyDialogTag = "fragment_reply_dialog";
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
@@ -98,8 +95,20 @@ public class ProfileActivity extends ActionBarActivity
         replyDialog.show(fm, replyDialogTag);
     }
 
+    // Callback method for when Tweet button is hit after replying to a tweet in the listview
     public void onFinishReplyDialog(Tweet newTweet) {
         replyDialog.dismiss();
+
+        tweetReplyGenericActions(newTweet);
+    }
+
+    private void tweetReplyGenericActions(Tweet newTweet) {
+        newTweet.setUser(Constants.currentUser);
+        newTweet.save();
+        SQLiteUtils.execSql("UPDATE Tweets SET user=(SELECT Id FROM Users " +
+                "WHERE uid=" + Constants.currentUser.getUid() + ")"
+                + " WHERE uid = "
+                + newTweet.getuid());
 
         ArrayList<Tweet> temp = new ArrayList<>();
         temp.add(newTweet);
@@ -107,7 +116,6 @@ public class ProfileActivity extends ActionBarActivity
         fragmentUserTimeline.clear();
         fragmentUserTimeline.addAll(temp);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -126,7 +134,10 @@ public class ProfileActivity extends ActionBarActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }
+        } /*else if (id == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }*/
 
         return super.onOptionsItemSelected(item);
     }

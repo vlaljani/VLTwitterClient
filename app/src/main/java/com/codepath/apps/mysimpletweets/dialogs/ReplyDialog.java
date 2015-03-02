@@ -58,8 +58,8 @@ public class ReplyDialog extends DialogFragment {
     public static ReplyDialog newInstance(String screen_name, long curr_status_uid) {
         ReplyDialog frag = new ReplyDialog();
         Bundle args = new Bundle();
-        args.putString("screen_name", screen_name);
-        args.putLong("curr_status_uid", curr_status_uid);
+        args.putString(Constants.screenNameKey, screen_name);
+        args.putLong(Constants.currTweetUidKey, curr_status_uid);
         frag.setArguments(args);
         return frag;
     }
@@ -77,8 +77,8 @@ public class ReplyDialog extends DialogFragment {
 
     private void setupViews(View view) {
         auth_user = Constants.currentUser;
-        String screen_name = getArguments().getString("screen_name");
-        curr_status_uid = getArguments().getLong("curr_status_uid");
+        String screen_name = getArguments().getString(Constants.screenNameKey);
+        curr_status_uid = getArguments().getLong(Constants.currTweetUidKey);
 
         btnBack = (ImageButton) view.findViewById(R.id.btnBack);
         ivProfPic = (ImageView) view.findViewById(R.id.ivProfPic);
