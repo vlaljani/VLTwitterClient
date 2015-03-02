@@ -54,7 +54,8 @@ public abstract class TweetsListFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tweets_list, container, false);
-        setupViews(view);
+
+        setupViews(view, inflater);
 
         return view;
     }
@@ -70,13 +71,16 @@ public abstract class TweetsListFragment extends Fragment {
         tweetArrayAdapter = new TweetsAdapter(getActivity(), tweetArrayList);
     }
 
-    private void setupViews(View view) {
+    private void setupViews(View view, LayoutInflater inflater) {
         lvTweets = (ListView) view.findViewById(R.id.lvTweets);
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         swipeContainer.setColorSchemeResources(R.color.twitter_blue,
                 R.color.white,
                 R.color.twitter_blue,
                 R.color.white);
+
+        View v = inflater.inflate(R.layout.progress, null);
+        lvTweets.addFooterView(v);
 
         lvTweets.setAdapter(tweetArrayAdapter);
 
