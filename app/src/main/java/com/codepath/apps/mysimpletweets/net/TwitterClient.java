@@ -124,6 +124,7 @@ public class TwitterClient extends OAuthBaseClient {
         params.put("result_type", result_type);
         if (max_id != Constants.max_id_first_req) {
             params.put("max_id", max_id);
+            params.put("count", Constants.tweetCount);
         }
         client.get(apiUrl, params, handler);
     }
