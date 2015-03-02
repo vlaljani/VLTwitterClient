@@ -64,6 +64,8 @@ Codepath jars for OAuth
 
 ![Video Walk Through (Week 4)](Week4VideoWalkthrough.gif)
 
+![Video Walk Through (Infinite Scrolling)](Week4VideoWalkthroughInfiniteScrolling.gif)
+
 
 Video Walk Through: 
 
